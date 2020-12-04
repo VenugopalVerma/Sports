@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Sports</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="history_fragment">History Fragment</string>
+    <string name="facebook_application_id">194900905550973</string>
+    <string name="facebook_login_protocol_scheme">fb194900905550973</string>
+</resources>
