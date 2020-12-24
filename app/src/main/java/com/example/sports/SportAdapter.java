@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
@@ -36,6 +38,12 @@ public class SportAdapter extends RecyclerView.Adapter<SportAdapter.ViewHolder>{
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.title.setText(titles.get(position));
         holder.image.setImageResource(images.get(position));
+        holder.cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Navigation.findNavController(view).navigate(R.id.action_homeFragment_to_blankFragment,null);
+            }
+        });
     }
 
     @Override
@@ -47,11 +55,13 @@ public class SportAdapter extends RecyclerView.Adapter<SportAdapter.ViewHolder>{
 
         TextView title;
         ImageView image;
+        CardView cardView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.textView4);
             image = itemView.findViewById(R.id.imageView);
+            cardView = itemView.findViewById(R.id.sports_card);
         }
     }
 }

@@ -17,9 +17,16 @@ import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import static com.example.sports.Home.mAuth;
 
@@ -41,6 +48,7 @@ public class ProfileFragment extends Fragment {
     private TextView displayName;
     private Button signOut;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private Ground ground;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -71,6 +79,54 @@ public class ProfileFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        ground = new Ground("Name 1", "address 1", (float) 4.5);
+//        Boolean[] arr = new Boolean[7];
+        HashMap<String,Boolean> time = new HashMap<String, Boolean>();
+        time.put("5",true);
+        time.put("6",true);
+        time.put("7",true);
+        time.put("8",true);
+        time.put("9",true);
+        time.put("10",true);
+        time.put("11",true);
+        time.put("12",false);
+        time.put("13",true);
+        time.put("14",true);
+        time.put("15",true);
+        time.put("16",false);
+        time.put("17",true);
+        time.put("18",true);
+        time.put("19",true);
+        time.put("20",false);
+        time.put("21",true);
+        time.put("22",true);
+
+//        List<Boolean> arr = new ArrayList<Boolean>();
+//        arr.add(true);
+//        arr.add(true);
+//        arr.add(true);
+//        arr.add(true);
+//        arr.add(true);
+//        arr.add(true);
+//        arr.add(true);
+        HashMap<String, Object> data = new HashMap<String, Object>();
+        HashMap<String, Object> subdata = new HashMap<String, Object>();
+        subdata.put("0-SUN",time);
+        subdata.put("1-MON",time);
+        subdata.put("2-TUE",time);
+        subdata.put("3-WED",time);
+        subdata.put("4-THU",time);
+        subdata.put("5-FRI",time);
+        subdata.put("6-SAT",time);
+        data.put("BADMINTON", subdata);
+        data.put("CRICKET", subdata);
+        data.put("BASKETBALL", subdata);
+        data.put("FOOTBALL", subdata);
+        ground.setData(data);
+
+
+
     }
 
     @Override
@@ -82,6 +138,25 @@ public class ProfileFragment extends Fragment {
         signOut = view.findViewById(R.id.signOut);
         displayName = view.findViewById(R.id.displayName);
 //        signOut.setOnClickListener(Navigation.createNavigateOnClickListener(R.id.homeFragment));
+
+        TextView addData = view.findViewById(R.id.secret_button);
+//        addData.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Home.db.collection("grounds").add(ground).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+//                    @Override
+//                    public void onSuccess(DocumentReference documentReference) {
+//                        Toast.makeText(view.getContext(),"Data added",Toast.LENGTH_SHORT).show();
+//                    }
+//                }).addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//                        Toast.makeText(view.getContext(),"Failed",Toast.LENGTH_SHORT).show();
+//                    }
+//                });
+//            }
+//        });
+
 
 //        updateUi();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {

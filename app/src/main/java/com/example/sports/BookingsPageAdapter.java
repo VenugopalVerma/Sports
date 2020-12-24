@@ -5,6 +5,10 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class BookingsPageAdapter extends FragmentStateAdapter {
+
+    // THIS ADAPTER IS FOR TABS USE
+
+
     public BookingsPageAdapter(@NonNull Fragment fragment) {
         super(fragment);
     }

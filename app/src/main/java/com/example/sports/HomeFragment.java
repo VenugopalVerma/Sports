@@ -32,6 +32,8 @@ public class HomeFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    public static ViewPager2 viewPager2;
+
     public HomeFragment() {
         // Required empty public constructor
     }
@@ -75,10 +77,10 @@ public class HomeFragment extends Fragment {
 
 
     public void createTabs(@NotNull View view){
-        ViewPager2 viewPager2 = view.findViewById(R.id.view_pager);
+        viewPager2 = view.findViewById(R.id.view_pager);
         viewPager2.setAdapter(new HomePageAdapter(this));
 
-
+//        viewPager2.setCurrentItem(1);
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout,viewPager2, (tab, position) -> {
             switch (position){

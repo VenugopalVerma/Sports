@@ -9,7 +9,14 @@
         android:id="@+id/homeFragment"
         android:name="com.example.sports.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_blankFragment"
+            app:destination="@id/blankFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_groundDetailFragment"
+            app:destination="@id/groundDetailFragment" />
+    </fragment>
     <fragment
         android:id="@+id/historyFragment"
         android:name="com.example.sports.HistoryFragment"
@@ -20,4 +27,27 @@
         android:name="com.example.sports.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/blankFragment"
+        android:name="com.example.sports.BlankFragment"
+        android:label="fragment_blank"
+        tools:layout="@layout/fragment_blank" >
+        <action
+            android:id="@+id/action_blankFragment_to_groundDetailFragment"
+            app:destination="@id/groundDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/groundDetailFragment"
+        android:name="com.example.sports.GroundDetailFragment"
+        android:label="fragment_ground_detail"
+        tools:layout="@layout/fragment_ground_detail" >
+        <action
+            android:id="@+id/action_groundDetailFragment_to_bookingFragment"
+            app:destination="@id/bookingFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/bookingFragment"
+        android:name="com.example.sports.BookingFragment"
+        android:label="fragment_booking"
+        tools:layout="@layout/fragment_booking" />
 </navigation>

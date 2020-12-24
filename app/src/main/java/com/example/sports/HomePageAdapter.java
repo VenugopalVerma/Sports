@@ -8,6 +8,12 @@ import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class HomePageAdapter extends FragmentStateAdapter {
+
+
+    // THIS ADAPTER IS FOR TABS USE
+
+
+
     public HomePageAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }

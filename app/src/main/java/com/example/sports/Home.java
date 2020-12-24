@@ -15,6 +15,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,11 +32,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class Home extends AppCompatActivity {
 
@@ -41,13 +49,55 @@ public class Home extends AppCompatActivity {
     private static final int RC_SIGN_IN = 123;
     private long pressedTime;
     public static  FirebaseAuth mAuth;
+    public static  FirebaseFirestore db;
+    public  static FirebaseStorage storage;
+    public static Uri temp;
     public FirebaseAuth.AuthStateListener mAuthStateListener;
+    public static Bitmap bmp;
+    public static NavController navController;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_temp);
+
+        db = FirebaseFirestore.getInstance();
+
+        storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+//        StorageReference pathReference = storageRef.child("Groundimages/bad.jpg");
+//        StorageReference gsReference = storage.getReferenceFromUrl("gs://fir-rtc-4c5df.appspot.com/Groundimages/bad.jpg");
+
+        storageRef.child("Groundimages/bad.jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                temp = uri;
+                Log.d("Image uri", "onSuccess: " + uri);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("Image uri", "onFailure: ", e);
+            }
+        });
+
+//        storageRef.child("Groundimages/bad.png").getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+//            @Override
+//            public void onSuccess(byte[] bytes) {
+//                bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception exception) {
+//                // Handle any errors
+//                Log.e("Image uri", "onFailure: ", exception);
+//            }
+//        });
+
+        Calendar calendar = Calendar.getInstance();
+        Log.d("TAG", "onCreate: " + calendar.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.SHORT, Locale.US));
+
 
         mAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -56,6 +106,8 @@ public class Home extends AppCompatActivity {
                 updateUi();
             }
         };
+
+        mAuth.getAccessToken(true).addOnSuccessListener(getTokenResult -> Log.d("Token", "onCreate: " + getTokenResult.getToken()));
         setBottomNav();
 //        updateUi();
 
@@ -68,7 +120,7 @@ public class Home extends AppCompatActivity {
         FragmentManager supportFragmentManager = getSupportFragmentManager();
         NavHostFragment navHostFragment = (NavHostFragment) supportFragmentManager.findFragmentById(R.id.fragment);
 //        assert navHostFragment != null : "nav host is null";
-        NavController navController = navHostFragment.getNavController();
+        navController = navHostFragment.getNavController();
 
         NavigationUI.setupWithNavController(bottomNavigationView,navController);
     }
@@ -76,6 +128,7 @@ public class Home extends AppCompatActivity {
     public void updateUi(){
         Log.d("Auth state change", "updateUi: Home Activity");
         FirebaseUser user = mAuth.getCurrentUser();
+
         if (user == null){
             showDialog();
         }
