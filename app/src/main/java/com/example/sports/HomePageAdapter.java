@@ -30,9 +30,9 @@ public class HomePageAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position){
+//            case 0:
+//                return new ExploreFragment();
             case 0:
-                return new ExploreFragment();
-            case 1:
                 return new SportsFragment();
             default:
                 return new GroundsFragment();
@@ -41,6 +41,6 @@ public class HomePageAdapter extends FragmentStateAdapter {
 
     @Override
     public int getItemCount() {
-        return 3;
+        return 2;
     }
 }

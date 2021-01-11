@@ -1,11 +1,7 @@
 package com.example.sports;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,14 +10,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.cardview.widget.CardView;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.Calendar;
 import java.util.List;
 
 public class GroundAdapter extends RecyclerView.Adapter<GroundAdapter.ViewHolder> {
@@ -29,12 +23,13 @@ public class GroundAdapter extends RecyclerView.Adapter<GroundAdapter.ViewHolder
     private List<Ground> grounds;
     private LayoutInflater layoutInflater;
     Context context;
+    String selectedSport;
 
-    public GroundAdapter(List<Ground> grounds, Context context) {
+    public GroundAdapter(List<Ground> grounds, Context context, String selectedSport) {
         this.grounds = grounds;
         this.context = context;
         this.layoutInflater = LayoutInflater.from(context);
-
+        this.selectedSport = selectedSport;
     }
 
 
@@ -48,32 +43,41 @@ public class GroundAdapter extends RecyclerView.Adapter<GroundAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.name.setText(grounds.get(position).getName());
-        holder.card.setOnClickListener(new View.OnClickListener() {
+        Ground ground = grounds.get(position);
+        holder.name.setText(ground.getName());
+        holder.rating.setText(String.valueOf(ground.getRating()));
+        holder.sportsPlayed.setText(String.valueOf(ground.getSportsPlayed()));
+        holder.address.setText((CharSequence) ground.getAddress().get("city"));
 
+        holder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("ground",grounds.get(position));
+                bundle.putString("sport",selectedSport);
                 if (Home.navController.getCurrentDestination().getId() == R.id.blankFragment) {
-                    Navigation.findNavController(view).navigate(R.id.action_blankFragment_to_groundDetailFragment);
+                    Navigation.findNavController(view).navigate(R.id.action_blankFragment_to_groundDetailFragment,bundle);
                 }
                 else {
-                    Navigation.findNavController(view).navigate(R.id.action_homeFragment_to_groundDetailFragment);
+                    Navigation.findNavController(view).navigate(R.id.action_homeFragment_to_groundDetailFragment,bundle);
                 }
             }
         });
 
-        Uri uri = Home.temp;
+        String uri = ground.getImage();
         if (uri != null){
-            holder.image.setImageURI(uri);
-            Glide.with( holder.image.getContext()/* context */)
+//            holder.image.setImageURI(uri);
+            Glide.with( context)
 //                    .using(new FirebaseImageLoader())
-                    .load(uri).placeholder(R.drawable.bskt)
+                    .load(uri)
+                    .placeholder(R.drawable.update)
                     .into(holder.image );
+
             Log.d("Image for ground", "onBindViewHolder: " + uri);
         }
 //        Bitmap bmp = Home.bmp;
 //        holder.image.setImageBitmap(bmp);
-
+        Log.d("Bind view holder", "onBindViewHolder: " + grounds.get(position).getName() );
     }
 
     @Override
@@ -83,36 +87,21 @@ public class GroundAdapter extends RecyclerView.Adapter<GroundAdapter.ViewHolder
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView name;
+        public TextView name,rating,address,sportsPlayed;
         public ImageView image;
         public CardView card;
+//        public RatingBar rating;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.ground_name);
             image = itemView.findViewById(R.id.imageView2);
             card = itemView.findViewById(R.id.ground_card);
+            rating = itemView.findViewById(R.id.ground_rating);
+            address = itemView.findViewById(R.id.ground_loation);
+            sportsPlayed = itemView.findViewById(R.id.sports_played);
+
         }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public Fragment getCurrentFragmentId(){
-//        Activity activity = (Activity) context;
-        Home.navController.getCurrentDestination().getId();
-//        Calendar calendar = Calendar.getInstance();
-//        calendar.setTime();
-//        android.app.Fragment fragment =  activity.getFragmentManager().findFragmentById(R.id.nav_host_fragment_container);
-//        FragmentManager fragmentManager = activity.getFragmentManager();
-//        fragment.getChildFragmentManager().findFragmentById(R.layout.)
-//        Fragment navHostFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-//        return navHostFragment == null ? null : navHostFragment.getChildFragmentManager().getFragments().get(0);
-//        List<android.app.Fragment> fragments = fragmentManager.getFragments();
-
-//        for (android.app.Fragment fragment : fragments) {
-//            if (fragment != null && fragment.isVisible())
-//                return fragment;
-//        }
-        return null;
     }
 
 }

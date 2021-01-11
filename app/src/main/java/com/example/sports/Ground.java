@@ -1,18 +1,17 @@
 package com.example.sports;
 
-import android.net.Uri;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
-public class Ground {
-    private String name,address;
+public class Ground implements Serializable {
+    private String name,docId;
     private float rating;
     private String image;
-    private HashMap<String, Object> data;
+    private List<String> sportsPlayed;
+    private Map<String,Object> address;
 
-    public Ground(String name, String address, float rating) {
+    public Ground(String name, Map<String, Object> address, float rating) {
         this.name = name;
         this.address = address;
         this.rating = rating;
@@ -22,11 +21,19 @@ public class Ground {
     public Ground() {
     }
 
-    public Ground(String name, String address, float rating, String image) {
+    public Ground(String name, Map<String, Object> address, float rating, String image) {
         this.name = name;
         this.address = address;
         this.rating = rating;
         this.image = image;
+    }
+
+    public List<String> getSportsPlayed() {
+        return sportsPlayed;
+    }
+
+    public void setSportsPlayed(List<String> sportsPlayed) {
+        this.sportsPlayed = sportsPlayed;
     }
 
     public String getImage() {
@@ -45,11 +52,11 @@ public class Ground {
         this.name = name;
     }
 
-    public String getAddress() {
+    public Map<String, Object> getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
+    public void setAddress(Map<String, Object> address) {
         this.address = address;
     }
 
@@ -61,11 +68,11 @@ public class Ground {
         this.rating = rating;
     }
 
-    public HashMap<String, Object> getData() {
-        return data;
+    public String getDocId() {
+        return docId;
     }
 
-    public void setData(HashMap<String, Object> data) {
-        this.data = data;
+    public void setDocId(String docId) {
+        this.docId = docId;
     }
 }

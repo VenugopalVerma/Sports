@@ -1,8 +1,18 @@
 package com.example.sports;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -10,11 +20,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
+import static androidx.core.content.ContextCompat.getSystemService;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,6 +51,7 @@ public class HomeFragment extends Fragment {
     private String mParam2;
 
     public static ViewPager2 viewPager2;
+    TextView locationText;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -71,9 +90,12 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view =inflater.inflate(R.layout.fragment_home, container, false);
         Log.d("Home Fragment", "onCreateView: ");
+        locationText = view.findViewById(R.id.location_text);
+        locationText.setText(Home.locationCity);
         createTabs(view);
         return view;
     }
+
 
 
     public void createTabs(@NotNull View view){
@@ -84,13 +106,13 @@ public class HomeFragment extends Fragment {
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout,viewPager2, (tab, position) -> {
             switch (position){
+//                case 0:
+//                    tab.setText("Explore");
+//                    break;
                 case 0:
-                    tab.setText("Explore");
-                    break;
-                case 1:
                     tab.setText("Sports");
                     break;
-                case 2:
+                case 1:
                     tab.setText("Grounds");
                     break;
             }

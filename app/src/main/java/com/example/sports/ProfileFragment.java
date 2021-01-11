@@ -27,6 +27,7 @@ import com.google.firebase.firestore.DocumentReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.sports.Home.mAuth;
 
@@ -49,6 +50,8 @@ public class ProfileFragment extends Fragment {
     private Button signOut;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private Ground ground;
+    HashMap<String,Object> map1;
+    HashMap<String, Object> map2;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -80,7 +83,9 @@ public class ProfileFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        ground = new Ground("Name 1", "address 1", (float) 4.5);
+        Map<String,Object> address = new HashMap<String, Object>();
+        address.put("city","Pune");
+        ground = new Ground("Golf",address , (float) 4.5);
 //        Boolean[] arr = new Boolean[7];
         HashMap<String,Boolean> time = new HashMap<String, Boolean>();
         time.put("5",true);
@@ -102,6 +107,7 @@ public class ProfileFragment extends Fragment {
         time.put("21",true);
         time.put("22",true);
 
+
 //        List<Boolean> arr = new ArrayList<Boolean>();
 //        arr.add(true);
 //        arr.add(true);
@@ -112,21 +118,28 @@ public class ProfileFragment extends Fragment {
 //        arr.add(true);
         HashMap<String, Object> data = new HashMap<String, Object>();
         HashMap<String, Object> subdata = new HashMap<String, Object>();
-        subdata.put("0-SUN",time);
-        subdata.put("1-MON",time);
-        subdata.put("2-TUE",time);
-        subdata.put("3-WED",time);
-        subdata.put("4-THU",time);
-        subdata.put("5-FRI",time);
-        subdata.put("6-SAT",time);
-        data.put("BADMINTON", subdata);
-        data.put("CRICKET", subdata);
-        data.put("BASKETBALL", subdata);
-        data.put("FOOTBALL", subdata);
-        ground.setData(data);
+        subdata.put("SUN",time);
+        subdata.put("MON",time);
+        subdata.put("TUE",time);
+        subdata.put("WED",time);
+        subdata.put("THU",time);
+        subdata.put("FRI",time);
+        subdata.put("SAT",time);
+//        data.put("BADMINTON", subdata);
+//        data.put("CRICKET", subdata);
+//        data.put("BASKETBALL", subdata);
+        data.put("CYCLING", subdata);
+//        ground.setData(data);
+        ArrayList<String> sportsPlayed = new ArrayList<>();
+        sportsPlayed.add("CYCLING");
+//        sportsPlayed.add("CRICKET");
+//        sportsPlayed.add("BASKETBALL");
+//        sportsPlayed.add("BADMINTON");
+        ground.setSportsPlayed(sportsPlayed);
 
-
-
+        map2 = subdata;
+//        map1 = new HashMap<>();
+//        map1.put("GOLF",map2);
     }
 
     @Override
@@ -143,12 +156,20 @@ public class ProfileFragment extends Fragment {
 //        addData.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View view) {
-//                Home.db.collection("grounds").add(ground).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-//                    @Override
-//                    public void onSuccess(DocumentReference documentReference) {
-//                        Toast.makeText(view.getContext(),"Data added",Toast.LENGTH_SHORT).show();
-//                    }
-//                }).addOnFailureListener(new OnFailureListener() {
+//                Home.db.collection("grounds").document("pYAsLKI7qIly2JwILwCr").collection("sports").document("BADMINTON").set(map2)
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//                                Toast.makeText(view.getContext(),"Data added",Toast.LENGTH_SHORT).show();
+//                            }
+//                        })
+////                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+////                    @Override
+////                    public void onSuccess(DocumentReference documentReference) {
+////                        Toast.makeText(view.getContext(),"Data added",Toast.LENGTH_SHORT).show();
+////                    }
+////                })
+//                        .addOnFailureListener(new OnFailureListener() {
 //                    @Override
 //                    public void onFailure(@NonNull Exception e) {
 //                        Toast.makeText(view.getContext(),"Failed",Toast.LENGTH_SHORT).show();
@@ -203,7 +224,7 @@ public class ProfileFragment extends Fragment {
         // [END auth_fui_signout]
 
         Toast.makeText(getContext(),"User signed out",Toast.LENGTH_LONG).show();
-
+        Navigation.findNavController(getView()).navigate(R.id.action_profileFragment_to_homeFragment);
     }
 
     @Override

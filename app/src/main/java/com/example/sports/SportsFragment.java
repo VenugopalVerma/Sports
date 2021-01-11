@@ -2,16 +2,26 @@ package com.example.sports;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.sports.Home.db;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -27,7 +37,7 @@ public class SportsFragment extends Fragment {
 
     private RecyclerView sports;
     List<String> titles;
-    List<Integer> images;
+    List<String> images;
     SportAdapter sportAdapter;
 
     // TODO: Rename and change types of parameters
@@ -67,20 +77,26 @@ public class SportsFragment extends Fragment {
         titles = new ArrayList<>();
         images = new ArrayList<>();
 
-        titles.add("Football");
-        titles.add("Cricket");
-        titles.add("Badminton");
-        titles.add("Hockey");
-        titles.add("Basketball");
+        db.collection("sports").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-        images.add(R.drawable.foot);
-        images.add(R.drawable.cric);
-        images.add(R.drawable.bad);
-        images.add(R.drawable.hock);
-        images.add(R.drawable.bskt);
-
-        sportAdapter = new SportAdapter(images,titles,getContext());
-
+                        for (DocumentSnapshot queryDocumentSnapshot : queryDocumentSnapshots.getDocuments()){
+                            titles.add(queryDocumentSnapshot.getId());
+                            images.add((String) queryDocumentSnapshot.getData().get("image"));
+//                            Log.d("TAG", "onSuccess: " + queryDocumentSnapshot.getId());
+//                            Log.d("TAG", "onSuccess: " + queryDocumentSnapshot.getData());
+                            updateUi();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("TAG", "onFailure: ", e);
+                    }
+                });
     }
 
     @Override
@@ -91,7 +107,12 @@ public class SportsFragment extends Fragment {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(),2,GridLayoutManager.VERTICAL,false);
         sports = view.findViewById(R.id.sports_recycler);
         sports.setLayoutManager(gridLayoutManager);
-        sports.setAdapter(sportAdapter);
+        updateUi();
         return view;
+    }
+
+    private void updateUi(){
+        sportAdapter = new SportAdapter(images,titles,getContext());
+        sports.setAdapter(sportAdapter);
     }
 }

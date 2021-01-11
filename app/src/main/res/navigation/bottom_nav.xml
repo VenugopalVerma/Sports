@@ -26,7 +26,11 @@
         android:id="@+id/profileFragment"
         android:name="com.example.sports.ProfileFragment"
         android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile" >
+        <action
+            android:id="@+id/action_profileFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
     <fragment
         android:id="@+id/blankFragment"
         android:name="com.example.sports.BlankFragment"
@@ -49,5 +53,9 @@
         android:id="@+id/bookingFragment"
         android:name="com.example.sports.BookingFragment"
         android:label="fragment_booking"
-        tools:layout="@layout/fragment_booking" />
+        tools:layout="@layout/fragment_booking" >
+        <action
+            android:id="@+id/action_bookingFragment_to_historyFragment"
+            app:destination="@id/historyFragment" />
+    </fragment>
 </navigation>

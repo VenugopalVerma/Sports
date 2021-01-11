@@ -1,26 +1,31 @@
 package com.example.sports;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
-import androidx.navigation.NavHost;
-import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
-import android.app.Activity;
+import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -32,14 +37,15 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -55,19 +61,60 @@ public class Home extends AppCompatActivity {
     public FirebaseAuth.AuthStateListener mAuthStateListener;
     public static Bitmap bmp;
     public static NavController navController;
+    public static String locationCity;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_temp);
 
+
+        locationCity = func();
         db = FirebaseFirestore.getInstance();
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+        try {
+            Log.d("TAG", "onCreate: " + formatter.parse("Sat Jan 02 23:22:23 GMT+05:30 2021").compareTo(formatter.parse("Sat Jan 02 23:22:23 GMT+05:30 2021")));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(false)
+                .build();
+        db.setFirestoreSettings(settings);
 
         storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
 //        StorageReference pathReference = storageRef.child("Groundimages/bad.jpg");
 //        StorageReference gsReference = storage.getReferenceFromUrl("gs://fir-rtc-4c5df.appspot.com/Groundimages/bad.jpg");
+
+//        db.collection("grounds").whereArrayContains("sportsPlayed","GOLF").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+//            @Override
+//            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+//                Log.d("TAG", "onSuccess: " + queryDocumentSnapshots.getDocuments().size());
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Log.e("TAG", "onFailure: " + e);
+//            }
+//        });
+//
+//        db.collection("grounds").document("DVeoCnkeuE0zgtORFcRV").collection("sports").add()
+//                .addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                Log.d("TAG", "onSuccess: " + aVoid);
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Log.e("TAG", "onFailure: ", e);
+//            }
+//        });
+
+
 
         storageRef.child("Groundimages/bad.jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
@@ -82,6 +129,7 @@ public class Home extends AppCompatActivity {
             }
         });
 
+
 //        storageRef.child("Groundimages/bad.png").getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
 //            @Override
 //            public void onSuccess(byte[] bytes) {
@@ -95,10 +143,6 @@ public class Home extends AppCompatActivity {
 //            }
 //        });
 
-        Calendar calendar = Calendar.getInstance();
-        Log.d("TAG", "onCreate: " + calendar.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.SHORT, Locale.US));
-
-
         mAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -107,10 +151,83 @@ public class Home extends AppCompatActivity {
             }
         };
 
-        mAuth.getAccessToken(true).addOnSuccessListener(getTokenResult -> Log.d("Token", "onCreate: " + getTokenResult.getToken()));
+//        mAuth.getAccessToken(true).addOnSuccessListener(getTokenResult -> Log.d("Token", "onCreate: " + getTokenResult.getToken()));
+
         setBottomNav();
 //        updateUi();
 
+    }
+
+    public String func(){
+        String city = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
+            Log.d("TAG", "func: if");
+        } else {
+            Log.d("TAG", "func: else");
+            LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            try {
+                city = getLocation(location.getLatitude(), location.getLongitude());
+                Log.d("TAG", "func: " + city);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Not Found", Toast.LENGTH_SHORT).show();
+            }
+        }
+        return city;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1000) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                Log.d("TAG", "per: if");
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    Log.d("TAG", "per: if->if");
+                    try {
+                        String city = getLocation(location.getLatitude(), location.getLongitude());
+                        Log.d("TAG", "per: " + city);
+                        locationCity = city;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Not Found", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.d("TAG", "per: if -> else");
+                }
+            } else {
+                Log.d("TAG", "per: else");
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Log.d("TAG", "per: request code not matched");
+    }
+
+    private String getLocation(double lat, double lon){
+        String cityname = null;
+
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses;
+        try {
+            addresses = geocoder.getFromLocation(lat,lon,10);
+            if(addresses.size()>0)
+            {
+                for (Address adr: addresses){
+                    if(adr.getLocality() != null && adr.getLocality().length() > 0){
+                        cityname = adr.getLocality();
+                        Log.d("TAG", "getLocation: " + cityname);
+                        break;
+                    }
+                }
+            }
+        }catch (IOException io){
+            io.printStackTrace();
+        }
+        return cityname;
     }
 
 
@@ -207,10 +324,10 @@ public class Home extends AppCompatActivity {
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
                         CustomUser customUser = new CustomUser(user);
-                        db.collection("users").add(customUser).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        db.collection("users").document(user.getUid()).set(customUser).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
-                            public void onSuccess(DocumentReference documentReference) {
-                                Log.d("User", "DocumentSnapshot added with ID: " + documentReference.getId());
+                            public void onSuccess(Void aVoid) {
+                                Log.d("User", "DocumentSnapshot added with ID: " + aVoid);
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override

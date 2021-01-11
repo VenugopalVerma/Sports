@@ -1,5 +1,6 @@
 package com.example.sports;
 
+import android.net.Uri;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseUser;
@@ -7,9 +8,11 @@ import com.google.firebase.auth.UserInfo;
 
 public class CustomUser {
     private String uid,displayName, email,phoneNumber;
-//    private Uri photoUrl;
+    private String photoUrl;
 
     public CustomUser(){}
+
+
 
     public CustomUser(FirebaseUser user) {
 
@@ -19,15 +22,27 @@ public class CustomUser {
                 String providerId = profile.getProviderId();
 
                 // UID specific to the provider
-                uid = profile.getUid();
+                if (providerId.equals("firebase")){
+                    uid = profile.getUid();
+                }
 
                 // Name, email address, and profile photo Url
-                displayName = profile.getDisplayName();
-                email = profile.getEmail();
-//                photoUrl = profile.getPhotoUrl();
-                phoneNumber = profile.getPhoneNumber();
+                if (!(profile.getDisplayName() == null || profile.getDisplayName().equals(""))) {
+                    displayName = profile.getDisplayName();
+                }
+                if (!(profile.getEmail() == null || profile.getEmail().equals(""))) {
+                    email = profile.getEmail();
+                }
+                if (!(profile.getPhotoUrl() == null || profile.getPhotoUrl().toString().equals(""))) {
+                    photoUrl = profile.getPhotoUrl().toString();
+                }
 
-                Log.d("Custom User", "CustomUser: " + phoneNumber);
+                if (!(profile.getPhoneNumber() == null || profile.getPhoneNumber().equals(""))) {
+                    phoneNumber = profile.getPhoneNumber();
+                }
+
+
+                Log.d("Custom User", "CustomUser: " + providerId + ":" + uid);
 
             }
         }
@@ -45,6 +60,14 @@ public class CustomUser {
 //    public void setPhotoUrl(Uri photoUrl) {
 //        this.photoUrl = photoUrl;
 //    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
 
     public String getPhoneNumber() {
         return phoneNumber;

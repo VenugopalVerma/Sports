@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,16 +18,24 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.example.sports.Home.db;
+import static com.example.sports.Home.mAuth;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -47,7 +56,7 @@ public class BookingFragment extends Fragment {
     Spinner spinner,daysSpinner,timeSpinner;
     Ground ground;
     List<String> sportsPlayed;
-    private Button book;
+    String selected;
 
     public BookingFragment() {
         // Required empty public constructor
@@ -79,6 +88,8 @@ public class BookingFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        ground = (Ground) getArguments().get("ground");
+        selected = (String) getArguments().get("sport");
 
     }
 
@@ -91,102 +102,45 @@ public class BookingFragment extends Fragment {
         spinner = view.findViewById(R.id.sport_spinner);
         daysSpinner = view.findViewById(R.id.date_spinner);
         timeSpinner = view.findViewById(R.id.time_spinner);
-        book = view.findViewById(R.id.book);
 
+//        Log.d("TAG", "onCreateView: " + ground.getDocId());
+        setSpinnerData(ground.getDocId());
 
-        db.collection("grounds").document("xcHQVQnRtJWDWlVoxqmQ")
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ground = documentSnapshot.toObject(Ground.class);
-                        HashMap<String,Object> data = ground.getData();
-                        sportsPlayed = new ArrayList<String>(data.keySet());
-                        Log.d("TAG", "onSuccess: " + sportsPlayed);
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(view.getContext(),
-                                R.layout.support_simple_spinner_dropdown_item,
-                                sportsPlayed);
-//                        adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-                        spinner.setAdapter(adapter);
-
-                        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override
-                            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                                String option = String.valueOf(spinner.getSelectedItem());  //Don't forget to move this here otherwise it won't be updated.
-
-                                HashMap<String,Object> subMap = (HashMap<String, Object>) data.get(option);
-                                List<String> days = new ArrayList<String>(subMap.keySet());
-                                Collections.sort(days);
-                                ArrayAdapter<String> arrayAdapter1 = new ArrayAdapter<>(view.getContext(), R.layout.support_simple_spinner_dropdown_item, days);
-                                arrayAdapter1.notifyDataSetChanged();
-                                daysSpinner.setAdapter(arrayAdapter1);
-                                daysSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                    @Override
-                                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                                        String day = String.valueOf(daysSpinner.getSelectedItem());
-                                        HashMap<String,Boolean> dayMap = (HashMap<String, Boolean>) subMap.get(day);
-                                        List<String> slots = new ArrayList<String>(dayMap.keySet());
-                                        List<String> availableSlots = new ArrayList<String>();
-                                        for (int a = 0; a < slots.size(); a++){
-                                            String time = slots.get(a);
-                                            if (dayMap.get(time)){
-                                                availableSlots.add(time);
-
-                                            }
-                                        }
-                                        Collections.sort(availableSlots);
-                                        ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(view.getContext(), R.layout.support_simple_spinner_dropdown_item, availableSlots);
-                                        arrayAdapter2.notifyDataSetChanged();
-
-                                        timeSpinner.setAdapter(arrayAdapter2);
-                                    }
-
-                                    @Override
-                                    public void onNothingSelected(AdapterView<?> adapterView) {
-
-                                    }
-                                });
-                                Toast.makeText(view.getContext(),option,Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onNothingSelected(AdapterView<?> adapterView) {
-
-                            }
-                        });
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e("TAG", "onFailure: ", e);
-                    }
-                });
-
+        Button book = view.findViewById(R.id.book);
         book.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String sport = String.valueOf(spinner.getSelectedItem());
                 String day = String.valueOf(daysSpinner.getSelectedItem());
                 String time = String.valueOf(timeSpinner.getSelectedItem());
-                String field = "data."+sport + "." + day + "." + time;
-                db.collection("grounds").document("xcHQVQnRtJWDWlVoxqmQ")
-                        .update(field,false)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                Toast.makeText(view.getContext(),"Data updated\n Ground booked",Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(view.getContext(),"Booking Failed",Toast.LENGTH_SHORT).show();
-                            }
-                        });
+
+                Log.d("TAG", "onClick: " + sport + day + time);
+                if (time.isEmpty() || time.equals("null")){
+                    Toast.makeText(getContext(),"Try Again",Toast.LENGTH_LONG).show();
+                }
+                else {
+                    createBatch(ground.getDocId(),sport,day,time);
+                }
+
+//                db.collection("grounds").document("xcHQVQnRtJWDWlVoxqmQ")
+//                        .update(field,false)
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//                                Toast.makeText(view.getContext(),"Data updated\n Ground booked",Toast.LENGTH_SHORT).show();
+//                                Navigation.findNavController(view).navigate(R.id.action_bookingFragment_to_historyFragment);
+//                            }
+//                        })
+//                        .addOnFailureListener(new OnFailureListener() {
+//                            @Override
+//                            public void onFailure(@NonNull Exception e) {
+//                                Toast.makeText(view.getContext(),"Booking Failed",Toast.LENGTH_SHORT).show();
+//                            }
+//                        });
             }
         });
 //        String []sports = {"BADMINTON","CRICKET","FOOTBALL","GOLF","BASKETBALL"};
-//        ArrayAdapter<String> adapter = new ArrayAdapter<>(view.getContext(),
+//        ArrayAdapter<String> adapter = new ArrayAdapter<String>(view.getContext(),
 //                R.layout.support_simple_spinner_dropdown_item,
 //                sportsPlayed);
 ////        adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
@@ -195,5 +149,134 @@ public class BookingFragment extends Fragment {
 
 
         return view;
+    }
+
+    private void setSpinnerData(String docId){
+
+        sportsPlayed = ground.getSportsPlayed();
+        Log.d("TAG", "onSuccess: " + sportsPlayed);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                R.layout.support_simple_spinner_dropdown_item,
+                sportsPlayed);
+//                        adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        Log.d("TAG", "setSpinnerData: " + selected);
+        if (selected != null){
+            spinner.setSelection(sportsPlayed.indexOf(selected));
+        }
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                    String sport = String.valueOf(spinner.getSelectedItem());
+                String sport = adapterView.getItemAtPosition(i).toString();
+                Log.d("TAG", "onItemSelected: " + sport);
+
+                ArrayList<String> days = dateList();
+                ArrayAdapter<String> arrayAdapter1 = new ArrayAdapter<String>(view.getContext(), R.layout.support_simple_spinner_dropdown_item, days);
+                arrayAdapter1.notifyDataSetChanged();
+                daysSpinner.setAdapter(arrayAdapter1);
+                daysSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        String day = String.valueOf(daysSpinner.getSelectedItem()).substring(0,3);
+                        Log.d("TAG", "onItemSelected: " + day + docId + sport);
+
+
+                        db.collection("grounds").document(docId).collection("sports").document(sport).get()
+                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                    Map<String, Object> sportDocument = documentSnapshot.getData();
+                                    Log.d("TAG", "onItemSelected: " + sportDocument);
+                                    @SuppressWarnings("unchecked") Map<String,Boolean> dayMap = (Map<String, Boolean>) sportDocument.get(day);
+                                    List<String> slots = new ArrayList<String>(dayMap.keySet());
+                                    List<String> availableSlots = new ArrayList<>();
+                                    for (int a = 0; a < slots.size(); a++){
+                                        String time = slots.get(a);
+                                        if (dayMap.get(time)){
+                                            availableSlots.add(time);
+                                        }
+                                    }
+                                    Collections.sort(availableSlots);
+                                    ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(view.getContext(), R.layout.support_simple_spinner_dropdown_item, availableSlots);
+                                    arrayAdapter2.notifyDataSetChanged();
+
+                                    timeSpinner.setAdapter(arrayAdapter2);
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.e("TAG", "onFailure: ", e);
+                                }
+                            });
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
+                Toast.makeText(view.getContext(),sport,Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+    }
+
+    private void createBatch(String docId,String sport,String day,String time){
+        WriteBatch batch = db.batch();
+        DocumentReference groundRef = db.collection("grounds").document(docId).collection("sports").document(sport);
+        batch.update(groundRef,day.substring(0,3)+"."+time,false);
+
+        DocumentReference user = db.collection("users").document(mAuth.getUid()).collection("upcomings").document();
+
+
+        HashMap<String,Object> data = new HashMap<>();
+        data.put("cost","1234");
+        data.put("image",this.ground.getImage());
+        data.put("groundId",docId);
+        data.put("sport",sport);
+        data.put("bookedFor",day +" "+ time);
+        data.put("timestamp",new Date().toString());
+
+//        Log.d("TAG", "createBatch: "+db.collection("users").document(mAuth.getUid()).collection("upcommings").document());
+//        batch.update(user,"bookings.upcoming." + day + " " + time,new Receipt(data));
+        batch.set(user,data);
+
+        batch.commit().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(getContext(),"Data updated\n Ground booked",Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(getView()).navigate(R.id.action_bookingFragment_to_historyFragment);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getContext(),"Booking Failed",Toast.LENGTH_SHORT).show();
+                Log.e("Booking", "onFailure: ", e);
+            }
+        });
+    }
+
+    private ArrayList<String> dateList(){
+        Calendar calendar = Calendar.getInstance();
+        ArrayList<String> list = new ArrayList<String>();
+        String temp;
+        DateFormat dateFormat = new SimpleDateFormat("EEE dd-MMM-yyyy",Locale.getDefault());
+
+        for (int i=0; i < 7;i++){
+            String day = calendar.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.SHORT, Locale.getDefault());
+            temp = dateFormat.format(calendar.getTime());
+            list.add(temp.toUpperCase());
+            calendar.add(Calendar.DATE,1);
+        }
+        return list;
     }
 }

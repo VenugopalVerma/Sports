@@ -261,7 +261,6 @@
                                     android:id="@+id/imageView9"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    app:srcCompat="@drawable/turf"
                                     />
                                 <TextView
                                     android:layout_width="match_parent"

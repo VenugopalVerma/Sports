@@ -2,13 +2,20 @@ package com.example.sports;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,13 +70,26 @@ public class GroundsFragment extends Fragment {
         }
 
         groundList = new ArrayList<Ground>();
-        groundList.add(new Ground("Some name","Some Address", (float) 4.5, "gs://fir-rtc-4c5df.appspot.com/Groundimages/bad.jpg"));
-        groundList.add(new Ground("Some name","Some Address", (float) 4.5));
-        groundList.add(new Ground("Some name","Some Address", (float) 4.5));
-        groundList.add(new Ground("Some name","Some Address", (float) 4.5));
-        groundList.add(new Ground("Some name","Some Address", (float) 4.5));
+        Home.db.collection("grounds").whereEqualTo("address.city",Home.locationCity).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+//                List<?> temp = queryDocumentSnapshots.getDocuments();
+                for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()){
+                    Ground tempGround = documentSnapshot.toObject(Ground.class);
+                    groundList.add(tempGround);
+//                    Log.d("TAG", "onSuccess: " + tempGround.getName());
+                }
+                updateUi();
+//                Toast.makeText(getContext(),"Total no of documents" + temp.size(),Toast.LENGTH_LONG).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+//                Toast.makeText(getContext(),"Failed Total no of documents",Toast.LENGTH_LONG).show();
+                Log.e("TAG", "onFailure: ", e);
+            }
+        });
 
-        groundAdapter = new GroundAdapter(groundList,getContext());
     }
 
     @Override
@@ -78,10 +98,16 @@ public class GroundsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_grounds, container, false);
 //        grounds = view.findViewById(R.id.sports_recycler);
+//        groundAdapter = new GroundAdapter(groundList,getContext());
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(),1,GridLayoutManager.VERTICAL,false);
         grounds = view.findViewById(R.id.grounds_recycler);
         grounds.setLayoutManager(gridLayoutManager);
-        grounds.setAdapter(groundAdapter);
+        updateUi();
         return view;
+    }
+
+    private void updateUi(){
+        groundAdapter = new GroundAdapter(groundList,getContext(), null);
+        grounds.setAdapter(groundAdapter);
     }
 }
